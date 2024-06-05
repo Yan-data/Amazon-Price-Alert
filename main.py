@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import lxml
 import smtplib
 import os
+import psycopg2
+
 ALERT_PRICE = 90
 URL = os.environ.get('URL')
 print(URL)
@@ -20,6 +22,22 @@ headers = {
     'sec-ch-ua': '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"'
 }
 
+# create table in postgres
+conn = psycopg2.connect(database="Amazon_prices",
+                        host="db_host",
+                        user="db_user",
+                        password="db_pass",
+                        port=5432)
+# Open a cursor to perform database operations
+cur = conn.cursor()
+# Execute a command: create a price table
+cur.execute("""CREATE TABLE prices(
+            price_id SERIAL PRIMARY KEY,
+            item_title VARCHAR (50) NOT NULL,
+            price FLOAT NOT NULL,
+            time DATETIME UNIQUE NOT NULL);
+            """)
+
 
 def check_price():
     # get price data
@@ -29,11 +47,18 @@ def check_price():
     price = float(price_tag.getText().split('$')[1])
     title = soup.find(id="productTitle").get_text().strip()
     today = datetime.now().date()
-    data = [title, price, today]
+    # data = [title, price, today]
     # save data to csv
-    with open(f'amazon_price_list', 'a+', newline='', encoding='UTF8') as file:
-        writer = csv.writer(file)
-        writer.writerow(data)
+    # with open(f'amazon_price_list', 'a+', newline='', encoding='UTF8') as file:
+    #   writer = csv.writer(file)
+    #  writer.writerow(data)
+    # insert data to db
+    cur.execute("INSERT INTO prices(item_title, price, time) VALUES(title,price,today)")
+    # Make the changes to the database persistent
+    conn.commit()
+    # Close cursor and communication with the database
+    cur.close()
+    conn.close()
 
     def send_email():
         message = f"{title} is now {price}"
