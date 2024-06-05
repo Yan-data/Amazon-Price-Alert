@@ -1,6 +1,6 @@
 # Amazon price alert
 
-Amazon price alert is a to scrape the price of a product on amazon every 24 hours, track and store the prices into CSV file. When the price is lower then an alert price, you can also get an email.
+Amazon price alert is a to scrape the price of a product on amazon every 24 hours, track and store the prices into PostgresQL database. When the price is lower then an alert price, you can also get an email.
 
 ## Table of Contents
 
